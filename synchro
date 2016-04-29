@@ -1,0 +1,41 @@
+#!/bin/bash
+
+journal_path=$HOME/.synchro
+filesystem_A=$HOME/projet/systemA/
+filesystem_B=$HOME/projet/systemB/
+
+function meta_test {
+  #Test the metadatas of the files
+  if [[ ( `stat -c %a $1` -eq `stat -c %a $2` )  &&  #If files rights are the same
+     ( `stat -c %s $1` -eq `stat -c %s $2` )  && # same weight
+     ( `stat -c %Y $1` -eq `stat -c %Y $2` ) ]]; then # same date of last mod
+
+    echo "Metatest succeeded for $1 and $2 !"
+  else
+    echo "Metatest failed for $1 and $2 !"
+  fi
+
+
+}
+for fileA in $(ls -a $filesystem_A) ; do
+  echo $fileA
+  if [ `ls -a $filesystem_B | grep -c $fileA` -eq 1 ] ; then #Test si le fichier existe dans B et est unique
+    fileB=$(ls -a $filesystem_B | grep $fileA)
+    echo $fileB
+
+    fileA=$filesystem_A$fileA
+    fileB=$filesystem_B$fileB
+
+    if [[ ( -d $fileA && -f $fileB ) || ( -f $fileA  && -d $fileB ) ]]  ; then #If files are not of teh same type
+      echo "Conflit entre les $fileA et $fileB"
+
+    elif [[ -d $fileA  &&  -d $fileB ]] ; then
+	    echo " NOOOOOO!"
+      #Descendre recursivement : rappel de fonction
+
+    elif [[ -f $fileA  &&  -f $fileB ]] ; then
+      meta_test $fileA $fileB
+
+    fi
+fi
+done
