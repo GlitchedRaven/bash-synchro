@@ -1,41 +1,57 @@
 #!/bin/bash
 
-journal_path=$HOME/.synchro
+journal_path=$HOME//projet/.synchro
 filesystem_A=$HOME/projet/systemA/
 filesystem_B=$HOME/projet/systemB/
 
 function meta_test {
   #Test the metadatas of the files
+  meta_success=1
   if [[ ( `stat -c %a $1` -eq `stat -c %a $2` )  &&  #If files rights are the same
      ( `stat -c %s $1` -eq `stat -c %s $2` )  && # same weight
      ( `stat -c %Y $1` -eq `stat -c %Y $2` ) ]]; then # same date of last mod
 
     echo "Metatest succeeded for $1 and $2 !"
+    echo "$1 $2 `stat -c %a $1` `stat -c %s $1` `stat -c %Y $1`" > journal_path
   else
     echo "Metatest failed for $1 and $2 !"
+    meta_success=0
   fi
 
 
 }
-for fileA in $(ls -a $filesystem_A) ; do
-  echo $fileA
-  if [ `ls -a $filesystem_B | grep -c $fileA` -eq 1 ] ; then #Test si le fichier existe dans B et est unique
-    fileB=$(ls -a $filesystem_B | grep $fileA)
-    echo $fileB
 
-    fileA=$filesystem_A$fileA
-    fileB=$filesystem_B$fileB
+#function journal_verif {
+#}
 
-    if [[ ( -d $fileA && -f $fileB ) || ( -f $fileA  && -d $fileB ) ]]  ; then #If files are not of teh same type
-      echo "Conflit entre les $fileA et $fileB"
+function recursive_synchro { #arg $1 filesystem_A $2 filesystem_B
+  for fileA in $(ls -a $1) ; do
 
-    elif [[ -d $fileA  &&  -d $fileB ]] ; then
-	    echo " NOOOOOO!"
-      #Descendre recursivement : rappel de fonction
+    if [ `ls -a $2 | grep -c $fileA` -eq 1 ] ; then #Test si le fichier existe dans B et est unique
+      fileB=$(ls -a $2 | grep $fileA)
 
-    elif [[ -f $fileA  &&  -f $fileB ]] ; then
-      meta_test $fileA $fileB
+      local fileA=$1$fileA
+      local fileB=$2$fileB
 
-    fi
-fi
-done
+      echo $fileA
+      echo $fileB
+
+      if [[ ( -d $fileA && -f $fileB ) || ( -f $fileA  && -d $fileB ) ]]  ; then #If files are not of teh same type
+        echo "Conflit entre les $fileA et $fileB"
+
+      elif [[ -d $fileA  &&  -d $fileB ]] ; then
+  	    echo " Recursion dans $fileA et $fileB"
+        #Descendre recursivement : rappel de fonction
+        recursive_synchro $1$fileA $2$fileB
+
+      elif [[ -f $fileA  &&  -f $fileB ]] ; then
+        echo "metatest time"
+        meta_test $fileA $fileB
+      else
+        echo "everything failed"
+      fi
+  fi
+  done
+}
+
+recursive_synchro $filesystem_A $filesystem_B
