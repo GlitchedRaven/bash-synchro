@@ -21,8 +21,30 @@ function meta_test {
 
 }
 
-#function journal_verif {
-#}
+function journal_verif {
+  local j_line =$(cat $journal_path | grep $1)
+
+  local j_rights=$(cut $j_line -f 3 -d ' ')
+  local j_weight=$(cut $j_line -f 4 -d ' ')
+  local j_date=$(cut $j_line -f 5 -d ' ')
+
+  if [[ ( `stat -c %a $1` -eq $j_rights )  &&  #If files rights are the same
+     ( `stat -c %s $1` -eq $j_weight )  && # same weight
+     ( `stat -c %Y $1` -eq $j_date ) ]]; then
+
+       echo "$1 is the TRUE heir of the throne !"
+       cp $1  $2
+
+  elif [[ ( `stat -c %a $2` -eq $j_rights )  &&  #If files rights are the same
+     ( `stat -c %s $2` -eq $j_weight )  && # same weight
+     ( `stat -c %Y $2` -eq $j_date ) ]]; then
+
+       echo "$2 is the TRUE heir of the throne"
+       cp $2 $1
+  else
+      echo "Conflit entre $1  et $2 !"
+
+}
 
 function recursive_synchro { #arg $1 filesystem_A $2 filesystem_B
   for fileA in $(ls -a $1) ; do
@@ -45,8 +67,14 @@ function recursive_synchro { #arg $1 filesystem_A $2 filesystem_B
         recursive_synchro $1$fileA $2$fileB
 
       elif [[ -f $fileA  &&  -f $fileB ]] ; then
-        echo "metatest time"
+        echo "Metatest time"
         meta_test $fileA $fileB
+
+        if [[ $meta_success -eq 0 ]] ; then
+          echo "lolilo"
+          #journal_verif $fileA $fileB
+        fi
+
       else
         echo "everything failed"
       fi
