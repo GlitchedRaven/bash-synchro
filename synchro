@@ -42,7 +42,9 @@ function journal_verif {
        echo "$2 is the TRUE heir of the throne"
        cp $2 $1
   else
-      echo "Conflit entre $1  et $2 !"
+      echo "Conflit entre $1 et $2 !"
+    fi
+  
 
 }
 
