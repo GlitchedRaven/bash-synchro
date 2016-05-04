@@ -11,29 +11,35 @@ function meta_test {
      ( `stat -c %s $1` -eq `stat -c %s $2` )  && # same weight
      ( `stat -c %Y $1` -eq `stat -c %Y $2` ) ]]; then # same date of last mod
 
+    data="$1 $2 `stat -c %a $1` `stat -c %s $1` `stat -c %Y $1`"
     echo "Metatest succeeded for $1 and $2 !"
-    echo "$1 $2 `stat -c %a $1` `stat -c %s $1` `stat -c %Y $1`" > journal_path
+    if [[ `cat $journal_path | grep -c $1` -gt 0 ]] ; then
+      sed -i 's|^"$1"$|"$data"|' "$journal_path"
+    else
+        echo $data >> $journal_path
+    fi
+
   else
-    echo "Metatest failed for $1 and $2 !"
-    meta_success=0
+      echo "Metatest failed for $1 and $2 !"
+      meta_success=0
   fi
 
 
 }
 
 function journal_verif {
-  local j_line =$(cat $journal_path | grep $1)
-
-  local j_rights=$(cut $j_line -f 3 -d ' ')
-  local j_weight=$(cut $j_line -f 4 -d ' ')
-  local j_date=$(cut $j_line -f 5 -d ' ')
+  #local j_line=$(cat $journal_path | grep $1)
+  local j_rights=$(cat $journal_path | grep $1 | cut -f 3 -d' ')
+  local j_weight=$(cat $journal_path | grep $1 | cut -f 4 -d' ')
+  local j_date=$(cat $journal_path | grep $1 |cut $j_line -f 5 -d' ')
 
   if [[ ( `stat -c %a $1` -eq $j_rights )  &&  #If files rights are the same
      ( `stat -c %s $1` -eq $j_weight )  && # same weight
      ( `stat -c %Y $1` -eq $j_date ) ]]; then
 
        echo "$1 is the TRUE heir of the throne !"
-       cp $1  $2
+       cp $1 $2
+       touch $1 $2
 
   elif [[ ( `stat -c %a $2` -eq $j_rights )  &&  #If files rights are the same
      ( `stat -c %s $2` -eq $j_weight )  && # same weight
@@ -41,10 +47,11 @@ function journal_verif {
 
        echo "$2 is the TRUE heir of the throne"
        cp $2 $1
+       touch $1 $2
   else
       echo "Conflit entre $1 et $2 !"
     fi
-  
+
 
 }
 
@@ -66,15 +73,15 @@ function recursive_synchro { #arg $1 filesystem_A $2 filesystem_B
       elif [[ -d $fileA  &&  -d $fileB ]] ; then
   	    echo " Recursion dans $fileA et $fileB"
         #Descendre recursivement : rappel de fonction
-        recursive_synchro $1$fileA $2$fileB
+        recursive_synchro $fileA/ $fileB/
 
       elif [[ -f $fileA  &&  -f $fileB ]] ; then
         echo "Metatest time"
         meta_test $fileA $fileB
 
         if [[ $meta_success -eq 0 ]] ; then
-          echo "lolilo"
-          #journal_verif $fileA $fileB
+          echo "Battle for the throne !"
+          journal_verif $fileA $fileB
         fi
 
       else
