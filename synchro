@@ -37,7 +37,7 @@ function journal_verif {
      ( `stat -c %s $1` -eq $j_weight )  && # same weight
      ( `stat -c %Y $1` -eq $j_date ) ]]; then
 
-       echo "$1 is the TRUE heir of the throne !"
+       echo "$1 is the TRUE heir to the throne !"
        cp $1 $2
        touch $1 $2
 
@@ -45,7 +45,7 @@ function journal_verif {
      ( `stat -c %s $2` -eq $j_weight )  && # same weight
      ( `stat -c %Y $2` -eq $j_date ) ]]; then
 
-       echo "$2 is the TRUE heir of the throne"
+       echo "$2 is the TRUE heir to the throne"
        cp $2 $1
        touch $1 $2
   else
