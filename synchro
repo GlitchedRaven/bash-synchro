@@ -1,9 +1,20 @@
 #!/bin/bash
+readonly CON_TYPE=1
+readonly CON_CONTENT=2
+readonly CON_META=3
 
 journal_path=$HOME//projet/.synchro
 conflict_path=$HOME//projet/.conflict
 filesystem_A=$HOME/projet/systemA/
 filesystem_B=$HOME/projet/systemB/
+
+function journal_edit { #$1= journal_path $2=data $3=filename1
+  if [[ `cat $1 | grep -c $3` -gt 0 ]] ; then
+    sed -i 's|^"$3"$|"$2"|' "$1"
+  else
+    echo $2 >> $1
+  fi
+}
 
 function meta_test {
   #Test the metadatas of the files
@@ -14,21 +25,10 @@ function meta_test {
 
     data="$1 $2 `stat -c %a $1` `stat -c %s $1` `stat -c %Y $1`"
     echo "Metatest succeeded for $1 and $2 !"
-    if [[ `cat $journal_path | grep -c $1` -gt 0 ]] ; then
-      sed -i 's|^"$1"$|"$data"|' "$journal_path"
-    else
-        echo $data >> $journal_path
-    fi
+    journal_edit $journal_path "$data" $1
 
-  elif [[ `md5sum $1 | cut -f 1 -d' '` = `md5sum $2 | cut -f 1 -d' '` ]] ; then
-    data="$1 $2 -1"
-    echo "Conflit sur les metadonnées pour $1 et $2"
-    echo $data >> $conflict_path
-    meta_success=-1
-
-  else
-      echo "Metatest failed for $1 and $2 !"
-      meta_success=0
+  else #Metatest failed, the files will be compared to the journal
+    journal_verif $1 $2
   fi
 
 
@@ -45,51 +45,69 @@ function journal_verif {
      ( `stat -c %Y $1` -eq $j_date ) ]]; then
 
        echo "$1 is the TRUE heir to the throne !"
-       cp $1 $2
-       touch $1 $2
+       cp -p $1 $2
+
 
   elif [[ ( `stat -c %a $2` -eq $j_rights )  &&  #If files rights are the same
      ( `stat -c %s $2` -eq $j_weight )  && # same weight
      ( `stat -c %Y $2` -eq $j_date ) ]]; then
 
        echo "$2 is the TRUE heir to the throne"
-       cp $2 $1
-       touch $1 $2
+       cp -p $2 $1
+
+  elif [[ `md5sum $1 | cut -f 1 -d' '` = `md5sum $2 | cut -f 1 -d' '` ]] ; then
+    data="$1 $2 $CON_META"
+    journal_edit $conflict_path "$data" $1
   else
-      data"$1 $2 0"
-      echo $data >> $conflict_path
-      echo "Conflit entre $1 et $2 !"
-    fi
+    data="$1 $2 $CON_CONTENT"
+    journal_edit $conflict_path "$data" $1
+  fi
 
 
+}
+
+function user_choice {
+  PS3="$3"
+  select choice in \
+  "Conserver $1" "Conserver $2" "Ne rien faire" \
+
+  do
+    echo " ==> $choice "
+    case $REPLY in
+        1)  cp -p $1 $2  ;;
+        2)  cp -p $1 $2  ;;
+        3)  echo "Les deux fichiers ont été conservés" ;;
+    esac
+  done
 }
 
 function conflict_solver {
 
   case $3 in
-    1) if [[ ( -d $1 && -f $2 )]] ; then
-    echo " $1 est un repertoire, $2 est un fichier ordinaire"
-    echo " Souhaitez vous garder le premier fichier, le second, ou ne rien faire ?"
-    # MAKE TEST
+    1)  if [[ ( -d $1 && -f $2 )]] ; then
+        echo " $1 est un repertoire, $2 est un fichier ordinaire"
+        prompt=" Souhaitez vous garder le premier fichier, le second, ou ne rien faire ?"
+        user_choice $1 $2 $prompt
 
-    else
-      echo " $2 est un repertoire, $1 est un fichier ordinaire "
-      echo " Souhaitez vous garder le premier fichier, le second, ou ne rien faire ?"
-      # MAKE TEST
-    fi
-      ;;
+      else
+        echo " $2 est un repertoire, $1 est un fichier ordinaire "
+        prompt=" Souhaitez vous garder le premier fichier, le second, ou ne rien faire ?"
+        user_choice $1 $2 $prompt
+      fi
+        ;;
 
-    2) echo " $1 et $2 ne sont en conflit que sur les métadonnées"
-      echo " Souhaitez vous conservez celles du premier fichier, du second ou ne rien faire ?"
-      #MAKE TEST
-      ;;
+    2)  echo " $1 et $2 ne sont en conflit que sur les métadonnées"
+        prompt=" Souhaitez vous conservez celles du premier fichier, du second ou ne rien faire ?"
+        user_choice $1 $2 $prompt
+        ;;
 
-    3) echo " $1 et $2 diffèrent par leur contenu"
-    echo " Souhaitez vous garder le premier fichier, le second, ou ne rien faire ?"
-    #MAKE TEST
-      ;;
-    *) echo "Oups ! Unknown conflict !"
-      ;;
+    3)  echo " $1 et $2 diffèrent par leur contenu"
+        prompt=" Souhaitez vous garder le premier fichier, le second, ou ne rien faire ?"
+        user_choice $1 $2 $prompt
+        ;;
+
+    *)  echo "Oups ! Unknown conflict !"
+        ;;
   esac
 
 }
@@ -101,17 +119,17 @@ function recursive_copy {
       if  [[ -d $1$file ]] ; then
       echo "Le repertoire $file sera copié dans $2"
 
-        cp -r $1$file $2
+        cp -rp $1$file $2
+
 
 
       elif [[ -f $1$file ]] ; then
         echo "$file sera copié dans $2"
-        cp $1$file $2
-        touch $1$file $2$file
+        cp -p $1$file $2
       fi
 
 
-    elif [[ ( -d $1$file ) && ( `ls -a $2 | grep -c $file` -eq 1 ) ]] ; then # repertoire présent dans les deux fs
+    elif [[ ( -d $1$file ) && ( -d `ls -a $2 | grep $file` ) ]] ; then # repertoire présent dans les deux fs
     echo "Recursive copy dans $1$file"
     recursive_copy $1$file/ $2$file/
     fi
@@ -126,13 +144,12 @@ function recursive_synchro { #arg $1 filesystem_A $2 filesystem_B
 
       local fileA=$1$fileA
       local fileB=$2$fileB
-      local conflict=0  #0 = no conflict ; 1 = conflict of type ; 2  = meta conflict
 
-      echo $fileA
-      echo $fileB
+      #echo $fileA
+      #echo $fileB
 
       if [[ ( -d $fileA && -f $fileB ) || ( -f $fileA  && -d $fileB ) ]]  ; then #If files are not of teh same type
-        echo "Conflit entre les $fileA et $fileB"
+        echo "$fileA $fileB $CON_TYPE" >> conflict_path
 
       elif [[ -d $fileA  &&  -d $fileB ]] ; then
   	    echo " Recursion dans $fileA et $fileB"
@@ -140,21 +157,15 @@ function recursive_synchro { #arg $1 filesystem_A $2 filesystem_B
         recursive_synchro $fileA/ $fileB/
 
       elif [[ -f $fileA  &&  -f $fileB ]] ; then
-        echo "Metatest time"
         meta_test $fileA $fileB
-
-        if [[ $meta_success -eq 0 ]] ; then
-          echo "Battle for the throne !"
-          journal_verif $fileA $fileB
-        fi
-
       else
-        echo "everything failed"
+        echo "Everything failed"
       fi
   fi
   done
 }
 
-#recursive_synchro $filesystem_A $filesystem_B
+
 recursive_copy $filesystem_A $filesystem_B
 recursive_copy $filesystem_B $filesystem_A
+recursive_synchro $filesystem_A $filesystem_B
