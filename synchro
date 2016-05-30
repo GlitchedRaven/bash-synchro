@@ -3,14 +3,14 @@ readonly CON_TYPE=1
 readonly CON_CONTENT=2
 readonly CON_META=3
 
-journal_path=$HOME//projet/.synchro
-conflict_path=$HOME//projet/.conflict
+journal_path=$HOME/projet/.synchro
+conflict_path=$HOME/projet/.conflict
 filesystem_A=$HOME/projet/systemA/
 filesystem_B=$HOME/projet/systemB/
 
 function journal_edit { #$1= journal_path $2=data $3=filename1
   if [[ `cat $1 | grep -c $3` -gt 0 ]] ; then
-    sed -i 's|^"$3"$|"$2"|' "$1"
+    sed -i 's|.*'"$3"'.*|'"$2"'|' "$1"
   else
     echo $2 >> $1
   fi
@@ -24,8 +24,10 @@ function meta_test {
      ( `stat -c %Y $1` -eq `stat -c %Y $2` ) ]]; then # same date of last mod
 
     data="$1 $2 `stat -c %a $1` `stat -c %s $1` `stat -c %Y $1`"
-    echo "Metatest succeeded for $1 and $2 !"
+
     journal_edit $journal_path "$data" $1
+
+    echo "Metatest succeeded for $1 and $2 !"
 
   else #Metatest failed, the files will be compared to the journal
     journal_verif $1 $2
@@ -67,49 +69,59 @@ function journal_verif {
 }
 
 function user_choice {
-  PS3="$3"
-  select choice in \
-  "Conserver $1" "Conserver $2" "Ne rien faire" \
-
-  do
-    echo " ==> $choice "
+  #PS3="$3"
+  data='IT IS RESOLVED'
+  select test in "Conserver $1" "Conserver $2" "Ne rien faire"; do
+    echo "==> $test"
     case $REPLY in
-        1)  cp -p $1 $2  ;;
-        2)  cp -p $1 $2  ;;
-        3)  echo "Les deux fichiers ont été conservés" ;;
+        1)  if [[ -d $2 ]] ; then
+              rm -d $2;
+            fi
+            cp -p $1 $2 ; journal_edit $conflict_path $data $1 ; break  ;;
+        2)  if [[ -d $1 ]] ; then
+              rm -d $1;
+            fi
+          cp -p $2 $1 ; journal_edit $conflict_path $data $1; break ;;
+        3)  echo "Les deux fichiers ont été conservés"; break ;;
+        *) echo "invalid" ;;
     esac
   done
 }
 
 function conflict_solver {
 
-  case $3 in
-    1)  if [[ ( -d $1 && -f $2 )]] ; then
-        echo " $1 est un repertoire, $2 est un fichier ordinaire"
-        prompt=" Souhaitez vous garder le premier fichier, le second, ou ne rien faire ?"
-        user_choice $1 $2 $prompt
+  while read -u 9 line ; do
+    local fileA=$( echo $line | cut -f 1 -d' ')
+    local fileB=$(echo $line | cut -f 2 -d' ')
+    local conflict=$(echo $line | cut -f 3 -d' ')
 
-      else
-        echo " $2 est un repertoire, $1 est un fichier ordinaire "
-        prompt=" Souhaitez vous garder le premier fichier, le second, ou ne rien faire ?"
-        user_choice $1 $2 $prompt
-      fi
-        ;;
+    case $conflict in
+      1)  if [[ ( -d $fileA && -f $fileB )]] ; then
+          echo " $fileA est un repertoire, $fileB est un fichier ordinaire"
+          prompt=" Souhaitez vous garder le premier fichier, le second, ou ne rien faire ?"
+          user_choice $fileA $fileB "$prompt"
 
-    2)  echo " $1 et $2 ne sont en conflit que sur les métadonnées"
-        prompt=" Souhaitez vous conservez celles du premier fichier, du second ou ne rien faire ?"
-        user_choice $1 $2 $prompt
-        ;;
+        else
+          echo " $fileB est un repertoire, $fileA est un fichier ordinaire "
+          prompt=" Souhaitez vous garder le premier fichier, le second, ou ne rien faire ?"
+          user_choice $fileA $fileB "$prompt"
+        fi
+          ;;
 
-    3)  echo " $1 et $2 diffèrent par leur contenu"
-        prompt=" Souhaitez vous garder le premier fichier, le second, ou ne rien faire ?"
-        user_choice $1 $2 $prompt
-        ;;
+      2)  echo " $fileA et $fileB ne sont en conflit que sur les métadonnées"
+          prompt=" Souhaitez vous conservez celles du premier fichier, du second ou ne rien faire ?"
+          user_choice $fileA $fileB "$prompt"
+          ;;
 
-    *)  echo "Oups ! Unknown conflict !"
-        ;;
-  esac
-
+      3)  echo " $fileA et $fileB diffèrent par leur contenu"
+          prompt=" Souhaitez vous garder le premier fichier, le second, ou ne rien faire ?"
+          user_choice $fileA $fileB "$prompt"
+          ;;
+      RESOLVED) break;;
+      *)  echo "Oups ! Unknown conflict !"
+          ;;
+    esac
+  done 9< $conflict_path
 }
 
 function recursive_copy {
@@ -149,7 +161,8 @@ function recursive_synchro { #arg $1 filesystem_A $2 filesystem_B
       #echo $fileB
 
       if [[ ( -d $fileA && -f $fileB ) || ( -f $fileA  && -d $fileB ) ]]  ; then #If files are not of teh same type
-        echo "$fileA $fileB $CON_TYPE" >> conflict_path
+        data="$fileA $fileB $CON_TYPE"
+        journal_edit $conflict_path "$data" $fileA
 
       elif [[ -d $fileA  &&  -d $fileB ]] ; then
   	    echo " Recursion dans $fileA et $fileB"
@@ -169,3 +182,5 @@ function recursive_synchro { #arg $1 filesystem_A $2 filesystem_B
 recursive_copy $filesystem_A $filesystem_B
 recursive_copy $filesystem_B $filesystem_A
 recursive_synchro $filesystem_A $filesystem_B
+
+conflict_solver
