@@ -46,16 +46,20 @@ function journal_verif {
      ( `stat -c %s $1` -eq $j_weight )  && # same weight
      ( `stat -c %Y $1` -eq $j_date ) ]]; then
 
-       echo "$1 is the TRUE heir to the throne !"
-       cp -p $1 $2
+       echo "$2 is the TRUE heir to the throne !"
+       cp -p $2 $1
+       data="$1 $2 `stat -c %a $1` `stat -c %s $1` `stat -c %Y $1`"
+       journal_edit $journal_path $data $1
 
 
   elif [[ ( `stat -c %a $2` -eq $j_rights )  &&  #If files rights are the same
      ( `stat -c %s $2` -eq $j_weight )  && # same weight
      ( `stat -c %Y $2` -eq $j_date ) ]]; then
 
-       echo "$2 is the TRUE heir to the throne"
-       cp -p $2 $1
+       echo "$1 is the TRUE heir to the throne"
+       cp -p $1 $2
+       data="$1 $2 `stat -c %a $1` `stat -c %s $1` `stat -c %Y $1`"
+       journal_edit $journal_path "$data" $1
 
   elif [[ `md5sum $1 | cut -f 1 -d' '` = `md5sum $2 | cut -f 1 -d' '` ]] ; then
     data="$1 $2 $CON_META"
@@ -182,5 +186,4 @@ function recursive_synchro { #arg $1 filesystem_A $2 filesystem_B
 recursive_copy $filesystem_A $filesystem_B
 recursive_copy $filesystem_B $filesystem_A
 recursive_synchro $filesystem_A $filesystem_B
-
 conflict_solver
