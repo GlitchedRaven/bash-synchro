@@ -1,5 +1,0 @@
-#!/bin/bash
-
-data=rololo
-file=/home/osboxes/projet/systemB/crap1
-sed -i 's|.*'"$file"'.*|'"$data"'|' "$1"
