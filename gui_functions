@@ -5,26 +5,26 @@ function user_choiceG { #version graphique
 
   ans=$(zenity --list \
     --title="User choice" \
-    --text="$3 \nSouhaitez vous garder le premier fichier, le second, ou ne rien faire ?"\
+    --text=" $prompt \nSouhaitez vous garder le premier fichier, le second, ou ne rien faire ?"\
     --column "Choix" --column="Choix n°" --column="Fichier" --column="Source" --column="Type de fichier" --column="Date" --column="Taille" --column="Droits" --column="Adresse"\
     --radiolist \
-    TRUE "1" "`basename $1`" "`echo $1 | egrep -o 'system.'`" "`type_fich $1`" "`stat -c %Y $1`" "`stat -c %s $1`" "`stat -c %a $1`" "$1" \
-    FALSE "2" "`basename $2`" "`echo $2 | egrep -o 'system.'`" "`type_fich $2`" "`stat -c %Y $2`" "`stat -c %s $2`" "`stat -c %a $2`" "$2"\
+    TRUE "1" "`basename $1`" "`echo $1 | egrep -o 'system.'`" "`type_fich $1`" "`stat -c %x $1`" "`stat -c %s $1`" "`stat -c %a $1`" "$1" \
+    FALSE "2" "`basename $2`" "`echo $2 | egrep -o 'system.'`" "`type_fich $2`" "`stat -c %x $2`" "`stat -c %s $2`" "`stat -c %a $2`" "$2"\
     FALSE "3" "Ne rien faire" "" "" "" "" "" "")
 
   case $ans in
-      1) clean_copy $1 $2 `stat -c %a $1`; journal_edit $conflict_path "$data" $1; break ;;
-      2) clean_copy $1 $2 `stat -c %a $1`; journal_edit $conflict_path "$data" $1; break ;;
-      3) affich_text "Les deux fichiers ont été conservés" 1; break;;
-      *) affich_text "Entrée invalide." 2; break ;;
+      1) clean_copy $1 $2 `stat -c %a $1`; journal_edit $conflict_path "$data" $1;;
+      2) clean_copy $1 $2 `stat -c %a $1`; journal_edit $conflict_path "$data" $1 ;;
+      3) affich_text "Les deux fichiers ont été conservés" 1;;
+      *) affich_text "Entrée invalide." 2 ;;
   esac
 
 }
 function user_choiceK { #version console
   data='RESOLVED'
-
+  affich_text $prompt 1
   select test in "Conserver $1" "Conserver $2" "Ne rien faire" ; do
-    affich_text $3 1
+
     echo "==> $test"
     case $REPLY in
       1) clean_copy $1 $2 `stat -c %a $1`; journal_edit $conflict_path "$data" $1; break ;;

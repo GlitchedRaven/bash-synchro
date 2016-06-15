@@ -101,17 +101,21 @@ function conflict_solver {
 
     case $conflict in
       1) if [[ ( -d $fileA && -f $fileB )]] ; then
-          user_choice $fileA $fileB "$fileA est un repertoire, $fileB est un fichier ordinaire."
+          prompt="$fileA est un repertoire, $fileB est un fichier ordinaire."
+          user_choice $fileA $fileB "$prompt"
 
         else
-          user_choice $fileA $fileB "$fileB est un repertoire, $fileA est un fichier ordinaire."
+          prompt="$fileB est un repertoire, $fileA est un fichier ordinaire."
+          user_choice $fileA $fileB "$prompt"
         fi
           ;;
 
-      2) user_choice $fileA $fileB " $fileA et $fileB ne sont en conflit que sur les métadonnées."
+      2)  prompt="$fileA et $fileB diffèrent par leur contenu."
+          user_choice $fileA $fileB "$prompt"
           ;;
 
-      3) user_choice $fileA $fileB "$fileA et $fileB diffèrent par leur contenu."
+      3)prompt="$fileA et $fileB ne sont en conflit que sur les métadonnées."
+        user_choice $fileA $fileB "$prompt"
           ;;
       RESOLVED) ;;
       *) affich_text "Conflit inconnu" 3
@@ -126,15 +130,14 @@ function recursive_copy { #$1: filesystem_A $2 : filesystem_B
     if [[ `ls -a $2 | grep -c $file` -eq 0 ]] ; then #Test si le fichier n'existe que dans $1
       if  [[ -d $1$file ]] ; then
         affich_text "Le repertoire $file sera copié dans $2" 1
-        cp -ap $1$file $2
+        clean_copy $1$file $2$file `stat -c %a $2`
       elif [[ -f $1$file ]] ; then
         affich_text "$file sera copié dans $2" var_text 1
-        clean_copy $1$file $2 `stat -c %a $2`
+        clean_copy $1$file $2$file `stat -c %a $2`
       fi
 
     elif [[ ( -d $1$file ) && ( -d `ls -a $2 | grep $file` ) ]] ; then # repertoire présent dans les deux fs
     affich_text "Copie recursive dans $1$file" 1
-    #echo "Recursive copy dans $1$file"
     recursive_copy $1$file/ $2$file/
     fi
   done
