@@ -1,0 +1,14 @@
+/home/osboxes/projet/systemTest/systemA/contenu /home/osboxes/projet/systemTest/systemB/contenu 664 24 1465748591
+/home/osboxes/projet/systemTest/systemA/date /home/osboxes/projet/systemTest/systemB/date 664 21 1465748591
+/home/osboxes/projet/systemTest/systemA/DossierFichier /home/osboxes/projet/systemTest/systemB/DossierFichier 664 32 1465748591
+/home/osboxes/projet/systemTest/systemA/droits /home/osboxes/projet/systemTest/systemB/droits 755 22 1465748591
+/home/osboxes/projet/systemTest/systemA/fichierDossier /home/osboxes/projet/systemTest/systemB/fichierDossier 664 32 1465748591
+/home/osboxes/projet/systemTest/systemA/Idem /home/osboxes/projet/systemTest/systemB/Idem 664 19 1465748591
+/home/osboxes/projet/systemTest/systemA/sous_rep1/contenu /home/osboxes/projet/systemTest/systemB/sous_rep1/contenu 664 24 1465748591
+/home/osboxes/projet/systemTest/systemA/sous_rep1/date /home/osboxes/projet/systemTest/systemB/sous_rep1/date 664 21 1465748591
+/home/osboxes/projet/systemTest/systemA/sous_rep1/droits /home/osboxes/projet/systemTest/systemB/sous_rep1/droits 755 22 1465748591
+/home/osboxes/projet/systemTest/systemA/sous_rep1/Idem /home/osboxes/projet/systemTest/systemB/sous_rep1/Idem 664 19 1465748591
+/home/osboxes/projet/systemTest/systemA/sous_rep1/sous_rep2/contenu /home/osboxes/projet/systemTest/systemB/sous_rep1/sous_rep2/contenu 664 24 1465748591
+/home/osboxes/projet/systemTest/systemA/sous_rep1/sous_rep2/date /home/osboxes/projet/systemTest/systemB/sous_rep1/sous_rep2/date 664 21 1465748591
+/home/osboxes/projet/systemTest/systemA/sous_rep1/sous_rep2/droits /home/osboxes/projet/systemTest/systemB/sous_rep1/sous_rep2/droits 755 22 1465748591
+/home/osboxes/projet/systemTest/systemA/sous_rep1/sous_rep2/Idem /home/osboxes/projet/systemTest/systemB/sous_rep1/sous_rep2/Idem 664 19 1465748591
