@@ -47,4 +47,5 @@ echo "Même contenu" > $a/sousRep/contenu
 echo "Même contenu" > $b/sousRep/contenu
 touch $a/sousRep/contenu $b/sousRep/contenu
 
+sleep 1
 echo "Pas la même date" > $b/date

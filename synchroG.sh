@@ -5,6 +5,7 @@ source util_functions
 readonly CON_TYPE=1
 readonly CON_CONTENT=2
 readonly CON_META=3
+readonly CON_READ=4
 
 readonly MODE_CONS=-1
 readonly MODE_GUI=1
@@ -14,6 +15,7 @@ conflict_path=$HOME/projet/.conflict
 filesystem_A=$HOME/projet/systemTest/systemA/
 filesystem_B=$HOME/projet/systemTest/systemB/
 
+rm -f $conflict_path
 touch $conflict_path
 touch $journal_path
 
@@ -22,7 +24,7 @@ verb=0;
 for var in "$@"; do #analyse des options
   case $var in
     -g) var_text=$MODE_GUI;; #option graphique
-    -v) var_text=$((var_text+1))
+    -s) var_text=$((var_text+1))
   esac
 done
 
@@ -71,7 +73,9 @@ function journal_verif { #$1: file1 $2: file2
        data="$1 $2 `stat -c %a $1` `stat -c %s $1` `stat -c %Y $1`"
        journal_edit $journal_path "$data" $1
 
-
+  elif [[ !(-r $1) || !(-r $2)]]; then
+    data="$1 $2 $CON_READ"
+    journal_edit $conflict_path "$data" $1
   elif [[ `md5sum $1 | cut -f 1 -d' '` = `md5sum $2 | cut -f 1 -d' '` ]] ; then
     data="$1 $2 $CON_META"
     journal_edit $conflict_path "$data" $1
@@ -115,6 +119,9 @@ function conflict_solver {
           ;;
 
       3)prompt="$fileA et $fileB ne sont en conflit que sur les métadonnées."
+        user_choice $fileA $fileB "$prompt"
+          ;;
+      4)prompt="$fileA et/ou $fileB ne peuvent être lus."
         user_choice $fileA $fileB "$prompt"
           ;;
       RESOLVED) ;;

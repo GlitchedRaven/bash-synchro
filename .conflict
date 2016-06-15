@@ -1,9 +1,5 @@
-RESOLVED
-RESOLVED
-/home/osboxes/projet/systemTest/systemA/pareil /home/osboxes/projet/systemTest/systemB/pareil 2
-RESOLVED
-RESOLVED
-RESOLVED
-RESOLVED
-RESOLVED
-RESOLVED
+/home/osboxes/projet/systemTest/systemA/date /home/osboxes/projet/systemTest/systemB/date 3
+/home/osboxes/projet/systemTest/systemA/dossierFichier /home/osboxes/projet/systemTest/systemB/dossierFichier 1
+/home/osboxes/projet/systemTest/systemA/fichierDossier /home/osboxes/projet/systemTest/systemB/fichierDossier 1
+/home/osboxes/projet/systemTest/systemA/sousRep/droit /home/osboxes/projet/systemTest/systemB/sousRep/droit 4
+/home/osboxes/projet/systemTest/systemA/sousRep/taille /home/osboxes/projet/systemTest/systemB/sousRep/taille 2
