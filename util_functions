@@ -14,9 +14,9 @@ function clean_copy { # $1: file1 $2: file2 $3:file_right
 }
 function diff_file {
   case $1 in
-    pdf) local pdf1=pdftotext $2 ; local pdf2=pdftotext $3; diff pdf1 pdf2; break;;
-    txt) diff $2 $3; break ;;
-    *) break;;
+    pdf) local pdf1=pdftotext $2 ; local pdf2=pdftotext $3; affich_text "`diff $pdf1 $pdf2`" 1;;
+    txt) tmp=`diff $2 $3` ; affich_text "$tmp" 1 ;;
+    *) ;;
   esac
 }
 

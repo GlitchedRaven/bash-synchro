@@ -6,8 +6,9 @@ readonly CON_TYPE=1
 readonly CON_CONTENT=2
 readonly CON_META=3
 
-readonly MODE_CONS=0
+readonly MODE_CONS=-1
 readonly MODE_GUI=1
+
 journal_path=$HOME/projet/.synchro
 conflict_path=$HOME/projet/.conflict
 filesystem_A=$HOME/projet/systemTest/systemA/
@@ -17,9 +18,11 @@ touch $conflict_path
 touch $journal_path
 
 var_text=$MODE_CONS #mode console par défaut
+verb=0;
 for var in "$@"; do #analyse des options
   case $var in
-    -g ) var_text=$MODE_GUI ;; #option graphique
+    -g) var_text=$MODE_GUI;; #option graphique
+    -v) var_text=$((var_text+1))
   esac
 done
 
@@ -82,9 +85,9 @@ function journal_verif { #$1: file1 $2: file2
 }
 
 function user_choice { #envoie vers les différentes versions d'une même fonction (graphique ou en console)
-  if [[ $var_text -eq $MODE_CONS ]]; then
+  if [[ $var_text -le $MODE_CONS+1  ]]; then
     user_choiceK $1 $2 $3
-  elif [[ $var_text -eq $MODE_GUI ]]; then
+  elif [[ $var_text -ge $MODE_GUI ]]; then
     user_choiceG $1 $2 $3
   fi
 }
