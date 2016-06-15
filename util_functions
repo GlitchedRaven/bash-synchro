@@ -1,17 +1,15 @@
 #!/bin/bash
 
 function clean_copy { # $1: file1 $2: file2 $3:file_right
-
-  if [[ (-r $1) && (-w $2) ]] ; then
-    cp -p $1 $2
-  else
-    affich_text "Modification temporaire des droits" 1
-    chmod +r $1
-    chmod +w $2
-
-    cp -p $1 $2
-    chmod $3 $1 $2
-  fi
+      rm -fdr $2
+    if [[ -r $1 ]]; then
+      cp -ap $1 "`dirname $2`/"
+    else
+      affich_text "Modification temporaire des droits" 1
+      chmod +r $1
+      cp -ap $1 "`dirname $2`/"
+      chmod $3 $1 $2
+    fi
 
 }
 function diff_file {
